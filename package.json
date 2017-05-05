@@ -1,0 +1,17 @@
+{
+  "name": "html-formatter",
+  "version": "1.0.0",
+  "description": "Format HTML in a very customizable way!",
+  "main": "index.js",
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "sax": "^1.2.2"
+  },
+  "devDependencies": {
+    "tap": "^10.3.2"
+  }
+}

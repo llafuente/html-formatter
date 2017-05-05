@@ -2,6 +2,28 @@
 var tap = require('tap')
 var formatter = require('../')
 
+
+formatter.options.attributes.ignoreCount = ['th2-auth-parent'];
+
+formatter.options.attributes.order['*'] = [
+  "class",
+  /^\[class.*/,
+  "style",
+  /^\[style.*/,
+  "*ngIf",
+  "*ngFor",
+  /^\(*/,
+];
+
+formatter.options.attributes.order['input'] = [
+  "type",
+  "name",
+  "placeholder"
+];
+
+formatter.options.attributes.forceEmpty.push('th2-auth-parent');
+formatter.options.attributes.forceEmpty.push('th2-auth-child');
+
 tap.test('text inside tag', function (t) {
   formatter.format('<div>XXXX</div>', {}, function(err, text) {
     t.equal(text, '<div>XXXX</div>');
@@ -118,6 +140,26 @@ tap.test('newline-tab attributes sorted regex', function (t) {
   });
 });
 
+tap.test('test ignoreCount', function (t) {
+  formatter.format(`<div
+    class="xxx"
+    th2-auth-parent>
+    </div>`, {}, function(err, text) {
+    t.equal(text, `<div class="xxx" th2-auth-parent></div>`);
+    t.end();
+  });
+});
+
+tap.test('test ignoreCount but keep them sorted', function (t) {
+  formatter.format(`<div
+    th2-auth-parent class="xxx"
+    >
+    </div>`, {}, function(err, text) {
+    t.equal(text, `<div class="xxx" th2-auth-parent></div>`);
+    t.end();
+  });
+});
+
 tap.test('newline-tab attributes sorted regex', function (t) {
   formatter.format(`      <thead>
         <tr>
@@ -140,6 +182,7 @@ tap.test('newline-tab attributes sorted regex', function (t) {
     t.end();
   });
 });
+/*
 
 tap.test('newline-tab attributes sorted regex', function (t) {
   formatter.format(`        <tr *ngFor="let audit of changes" th2-auth-parent>
@@ -154,11 +197,6 @@ tap.test('newline-tab attributes sorted regex', function (t) {
             (click)="rollback(audit)">Rollback</a>
           </td>
         </tr>`, {
-          multiAttrsInline: [
-            /^class.*/,
-            /^th2.*/,
-            /^resource.*/,
-          ]
         }, function(err, text) {
     t.equal(text, `<tr *ngFor="let audit of changes" th2-auth-parent>
   <td>{{audit.date | date:'dd/MM/yyyy HH:mm'}}</td>
@@ -176,5 +214,5 @@ tap.test('newline-tab attributes sorted regex', function (t) {
   });
 });
 
-
+*/
 

@@ -2,7 +2,18 @@
 const sax = require("sax");
 const fs = require("fs");
 
+
 module.exports = {
+  options: {
+    attributes: {
+      order: {
+        '*': [],
+        // any tag
+      },
+      ignoreCount: [],
+      forceEmpty: []
+    }
+  },
   formatFile: function(filename, options, callback) {
     const str = fs.readFileSync(filename);
 
@@ -40,10 +51,12 @@ module.exports = {
       printOpenTag(output, indent, node.name);
 
       const attrs = getAttributes(node);
+      const count = getAttributeCount(node);
 
-
-      if (attrs.length == 1) {
-        output[output.length - 1] += ' ' + attrs[0].trim();
+      if (count == 1) {
+        output[output.length - 1] += ' ' + attrs.map((attr) => {
+          return attr.trim();
+        }).join(' ');
       } else {
         console.log('inlined attrs', options.multiAttrsInline.length);
 
@@ -146,25 +159,10 @@ module.exports = {
   }
 }
 
-const attrOrder = {
-  '*': [
-    "class",
-    /^\[class.*/,
-    "style",
-    /^\[style.*/,
-    "*ngIf",
-    "*ngFor",
-    /^\(*/,
-  ],
-  "input": [
-    "type",
-    "name",
-    "placeholder"
-  ]
-};
 const wsRE = /^(\s|\n|\r)*$/;
 
 function getAttributes(node) {
+  const attrOrder = module.exports.options.attributes.order;
   const order = attrOrder["*"].concat(attrOrder[node.name] || []);
   const keys = Object.keys(node.attributes);
   const attrs = [];
@@ -223,5 +221,17 @@ function printCloseTag(output, indent, tagName, inline) {
 }
 
 function getAttribute(attr, value) {
-  return `${attr}="${value}"`
+  if (module.exports.options.attributes.forceEmpty.indexOf(attr) !== -1) {
+    return `${attr}`;
+  }
+
+  return `${attr}="${value}"`;
+}
+
+function getAttributeCount(node) {
+  return Object
+    .keys(node.attributes)
+    .filter(function(key) {
+      return module.exports.options.attributes.ignoreCount.indexOf(key) === -1;
+    }).length;
 }

@@ -4,7 +4,7 @@
   "description": "Format HTML in a very customizable way!",
   "main": "index.js",
   "scripts": {
-    "test": "tap test/*.js"
+    "test": "tap --cov test/*.js"
   },
   "author": "",
   "license": "ISC",

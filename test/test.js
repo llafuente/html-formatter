@@ -1,6 +1,7 @@
 // test/hello-world.js
 var tap = require('tap')
 var formatter = require('../')
+var path = require('path')
 
 
 formatter.options.attributes.ignoreCount = ['th2-auth-parent'];
@@ -24,6 +25,10 @@ formatter.options.attributes.order['input'] = [
 formatter.options.attributes.forceEmpty.push('th2-auth-parent');
 formatter.options.attributes.forceEmpty.push('th2-auth-child');
 
+formatter.options.newlineAfter = [
+  "container"
+];
+
 tap.test('text inside tag', function (t) {
   formatter.format('<div>XXXX</div>', {}, function(err, text) {
     t.equal(text, '<div>XXXX</div>');
@@ -31,18 +36,17 @@ tap.test('text inside tag', function (t) {
   });
 });
 
+
 tap.test('text and tag inside container', function (t) {
-  formatter.format(`<div>
+  formatter.format(`<div>XXXX<div>YYYY</div></div>`, {}, function(err, text) {
+    t.equal(text, `<div>
   XXXX
-  <div>XXXX</div>
-</div>`, {}, function(err, text) {
-    t.equal(text, `<div>XXXX
-  <div>XXXX</div>
+  <div>YYYY</div>
 </div>`);
     t.end();
   });
-});
-
+})
+;
 tap.test('tags inside container', function (t) {
   formatter.format(`<div>
   <div>
@@ -54,6 +58,26 @@ tap.test('tags inside container', function (t) {
     t.equal(text, `<div>
   <div>XXXX</div>
   <div>YYY</div>
+</div>`);
+    t.end();
+  });
+});
+
+tap.test('tabulate text inside not-pre', function (t) {
+  formatter.format(`<div>
+  <div>
+     X
+X
+X
+X</div>
+</div>`, {}, function(err, text) {
+    t.equal(text, `<div>
+  <div>
+    X
+    X
+    X
+    X
+  </div>
 </div>`);
     t.end();
   });
@@ -79,13 +103,14 @@ X
     t.end();
   });
 });
-
+/*
 tap.test('no tabulate pre text', function (t) {
   formatter.format(`<pre>
 X
  X
 X
 </pre>`, {}, function(err, text) {
+    //console.log(JSON.stringify(text));
     t.equal(text, `<pre>
 X
  X
@@ -160,6 +185,29 @@ tap.test('test ignoreCount but keep them sorted', function (t) {
   });
 });
 
+tap.test('test texnode append', function (t) {
+  formatter.format("<p>4\n5</p>", {}, function(err, text) {
+    t.equal(text, "<p>\n  4\n  5\n</p>");
+    t.end();
+  });
+});
+
+tap.test('test nested texnode append', function (t) {
+  formatter.format("<a><p>4\n5</p></a>", {}, function(err, text) {
+    t.equal(text, "<a>\n  <p>\n    4\n    5\n  </p>\n</a>");
+    t.end();
+  });
+});
+
+tap.test('nested texnode append', function (t) {
+  formatter.format("<b></b><a><p>4\n5</p></a>", {}, function(err, text) {
+    t.equal(text, "<b></b>\n<a>\n  <p>\n    4\n    5\n  </p>\n</a>");
+    t.end();
+  });
+});
+
+/*
+
 tap.test('newline-tab attributes sorted regex', function (t) {
   formatter.format(`      <thead>
         <tr>
@@ -182,7 +230,7 @@ tap.test('newline-tab attributes sorted regex', function (t) {
     t.end();
   });
 });
-/*
+
 
 tap.test('newline-tab attributes sorted regex', function (t) {
   formatter.format(`        <tr *ngFor="let audit of changes" th2-auth-parent>
@@ -203,16 +251,87 @@ tap.test('newline-tab attributes sorted regex', function (t) {
   <td>{{audit.userCompleteName}}</td>
   <td>{{audit.type}}</td>
   <td class="actions">
-  <a class="btn btn-primary btn-icon"
-    *ngIf="audit.type == 'CONFIGURATION_CHANGE'"
-    [class.disabled]="deployment.currentRevision == audit.confRevisionId"
-    th2-auth-child resource="MANAGE_PRODUCT"
-    (click)="rollback(audit)">Rollback</a>
+    <a
+      class="btn btn-primary btn-icon"
+      [class.disabled]="deployment.currentRevision == audit.confRevisionId"
+      *ngIf="audit.type == 'CONFIGURATION_CHANGE'"
+      th2-auth-child
+      resource="MANAGE_PRODUCT"
+      (click)="rollback(audit)">Rollback</a>
   </td>
 </tr>`);
     t.end();
   });
 });
 
-*/
 
+tap.test('format text node properly', function (t) {
+  formatter.format(`<div>XXXXX<b>BBBBBB</b>YYYYY<i>sdsfdsfds</i></div>`, {
+        }, function(err, text) {
+    t.equal(text, `<div>
+  XXXXX
+  <b>BBBBBB</b>
+  YYYYY
+  <i>sdsfdsfds</i>
+</div>`);
+    t.end();
+  });
+});
+
+tap.test('test newlineEOF', function (t) {
+  formatter.options.newlineEOF = true;
+
+  formatter.format(
+    `<container><p>xxxx</p><p>fdhsjdfhsjd</p></container>`,
+    {},
+    function(err, text) {
+      formatter.options.newlineEOF = false;
+      t.equal(text, `<container>
+  <p>xxxx</p>
+  <p>fdhsjdfhsjd</p>
+</container>
+`);
+    t.end();
+  });
+});
+
+tap.test('test newlineAfter', function (t) {
+
+  formatter.format(
+    `<container><p>1</p><p>2</p></container><container><p>3</p><p>4
+5</p></container><div></div>`,
+    {},
+    function(err, text) {
+      formatter.options.newlineEOF = false;
+      t.equal(text, `<container>
+  <p>1</p>
+  <p>2</p>
+</container>
+
+<container>
+  <p>3</p>
+  <p>
+    4
+    5
+  </p>
+</container>
+
+<div></div>
+`);
+    t.end();
+  });
+});
+
+/*
+tap.test('format text node properly', function (t) {
+  formatter.formatFile(
+    path.join(__dirname, '../../front/dashboard/thin2-fe/src/app/views/Environment/EnvReleases/ReleaseService/ReleaseService.component.html'), {
+  }, function(err, text) {
+    t.equal(text, ``);
+    t.end();
+  });
+});
+
+
+
+/**/

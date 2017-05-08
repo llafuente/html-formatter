@@ -11,15 +11,18 @@ module.exports = {
         // any tag
       },
       ignoreCount: [],
-      forceEmpty: []
-    }
+      forceEmpty: [],
+    },
+    newlineAfter: [],
+    newlineEOF: false,
   },
   formatFile: function(filename, options, callback) {
     const str = fs.readFileSync(filename);
 
-    return this.parse(str, options, callback);
+    return this.format(str, options, callback);
   },
   format: function(html, options, callback) {
+    console.log("\n________________________\n");
     // final text as an array to easy operate
     let output = [];
     const tags = []; // node structure
@@ -45,7 +48,9 @@ module.exports = {
         node: node,
         contents: [],
         hasText: false,
+        rawText: false,
         newlineClose: false,
+        lastWasText: null
       });
 
       printOpenTag(output, indent, node.name);
@@ -86,56 +91,93 @@ module.exports = {
     };
 
     parser.onclosetag = function (tagName) {
-      console.log('closetag', tagName);
-
       const t = tags.pop();
+
+      console.log('closetag', tagName, t);
 
       if (tags.length) {
         tags[tags.length - 1].contents.push(t);
+        tags[tags.length - 1].lastWasText = false;
+      }
+
+      if (t.hasText && !t.contents.length) {
+        // collapse!
+        if (t.rawText) {
+          output[output.length - 2] += output[output.length - 1];
+        } else {
+          output[output.length - 2] += output[output.length - 1].trim();
+        }
+        output.pop();
       }
 
       printCloseTag(output, indent, tagName, t.newlineClose ? false : t.contents.length == 0);
     };
 
     parser.ontext = function (text) {
-      console.log('text', text);
+      console.log('text', JSON.stringify(text));
 
-      let isPre = false;
-      if (tags.length) {
-        isPre = tags[tags.length - 1].node.name === 'pre';
+      let t = tags.length ? tags[tags.length - 1] : null;
+      let isPre = t ? t.node.name === 'pre' : false;
+
+      if (t.lastWasText) {
+        // this maybe a parsing problem, sometimes it call ontext
+        // many times
+        text = output.pop() + text;
       }
 
-      const rtext = text.trim();
+      // do not use trim, because remove newlines
+      let cleanText = text;
+
+      if (!t.lastWasText) {
+        cleanText = cleanText
+          .replace(/^[\r\n][\r\n]*/, '') // remove newlines at start of texts
+      }
+
+      cleanText = cleanText
+        .replace(/^[ \t][ \t]*/, '') // start
+        .replace(/[ \t][ \t]*$/, '') // end
+        .replace(/^(\r|\n)*$/, ''); // only new lines?
+
+      console.log('cleanText', JSON.stringify(cleanText));
       //if (text.match(wsRE) == null) {
-      if (rtext.length) {
-        if (!isPre) {
-          text = rtext;
+      if (cleanText.length) {
+        if (!t) {
+          throw new Error("Global text is not allowed, enclose it in a tag");
         }
 
-        if (tags.length) {
-          tags[tags.length - 1].hasText = true;
+        console.log('t.lastWasText', t.lastWasText);
+
+        t.hasText = true;
+        t.lastWasText = true;
+
+        if (isPre) {
+          t.rawText = true;
+          output.push(text);
+          return;
         }
 
-        const multiline = text.split("\n").length > 1;
+        // no-pre -> use trimmed one
+        text = cleanText;
 
-        if (multiline) {
-          // reformat string if not in a pre
-          if (!isPre) {
-            output.push(
-              text.split("\n").map((line) => {
-                return indent.join('') + line.trim();
-              }).join("\n")
-            );
+        const multiline = text.indexOf("\n") !== -1;
+        console.log('multiline', multiline);
 
-            if (tags.length) {
-              tags[tags.length - 1].newlineClose = true;
-            }
+        if (!multiline) {
+          output.push(indent.join('') + text);
+          return;
+        }
 
-          } else {
-            output[output.length -1] += text;
-          }
-        } else {
-          output[output.length -1] += text;
+        t.rawText = true;
+
+        // reformat string if not in a pre
+        output.push(
+          "\n" + text.split("\n").map((line) => {
+            return indent.join('') + line.trim();
+          }).join("\n")
+        );
+
+        if (t) {
+          t.newlineClose = true;
         }
       }
     };
@@ -150,9 +192,12 @@ module.exports = {
     };
 
     parser.onend = function () {
-      console.log(output.join('\n'));
-
-      callback(null, output.join('\n'));
+      console.log('module.exports.options.newlineEOF', module.exports.options.newlineEOF);
+      if (module.exports.options.newlineEOF) {
+        callback(null,  output.join('\n') + '\n');
+      } else {
+        callback(null,  output.join('\n'));
+      }
     };
 
     parser.write(html).close();

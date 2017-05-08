@@ -2,7 +2,6 @@
 const sax = require("sax");
 const fs = require("fs");
 
-
 module.exports = {
   options: {
     attributes: {
@@ -22,7 +21,7 @@ module.exports = {
     return this.format(str, options, callback);
   },
   format: function(html, options, callback) {
-    console.log("\n________________________\n");
+    //console.log("\n________________________\n");
     // final text as an array to easy operate
     let output = [];
     const tags = []; // node structure
@@ -42,16 +41,24 @@ module.exports = {
     };
 
     parser.onopentag = function (node) {
-      console.log('opentag', node.name);
+      //console.log('opentag', node.name);
 
-      tags.push({
+      const newTag = {
         node: node,
         contents: [],
-        hasText: false,
-        rawText: false,
-        newlineClose: false,
-        lastWasText: null
-      });
+        text: '',
+        isRawText: false,
+        newlineBeforeClose: false,
+      };
+
+      if (tags.length) {
+        const t = tags[tags.length - 1];
+        t.contents.push(newTag);
+
+        handleTagText(output, indent, t);
+      }
+
+      tags.push(newTag);
 
       printOpenTag(output, indent, node.name);
 
@@ -63,12 +70,12 @@ module.exports = {
           return attr.trim();
         }).join(' ');
       } else {
-        console.log('inlined attrs', options.multiAttrsInline.length);
+        //console.log('inlined attrs', options.multiAttrsInline.length);
 
         // inlined attrs
         for (let i = 0; i < attrs.length; ++i) {
           for (let j = 0; j < options.multiAttrsInline.length; ++j) {
-            console.log('--->',i, attrs[i], options.multiAttrsInline[j], attrs[i].match(options.multiAttrsInline[i]));
+            //console.log('--->',i, attrs[i], options.multiAttrsInline[j], attrs[i].match(options.multiAttrsInline[i]));
             if (attrs[i].match(options.multiAttrsInline[j]) != null) {
               // inline, pop
               output[output.length - 1] += ' ' + attrs[i].trim();
@@ -93,92 +100,24 @@ module.exports = {
     parser.onclosetag = function (tagName) {
       const t = tags.pop();
 
-      console.log('closetag', tagName, t);
+      //console.log('closetag', tagName, t);
+      handleTagText(output, indent, t);
+      //console.log('closetag', tagName, t);
 
-      if (tags.length) {
-        tags[tags.length - 1].contents.push(t);
-        tags[tags.length - 1].lastWasText = false;
+      printCloseTag(output, indent, tagName, t.newlineBeforeClose ? false : t.contents.length == 0);
+
+      if (module.exports.options.newlineAfter.indexOf(tagName) !== -1) {
+        output.push('');
       }
-
-      if (t.hasText && !t.contents.length) {
-        // collapse!
-        if (t.rawText) {
-          output[output.length - 2] += output[output.length - 1];
-        } else {
-          output[output.length - 2] += output[output.length - 1].trim();
-        }
-        output.pop();
-      }
-
-      printCloseTag(output, indent, tagName, t.newlineClose ? false : t.contents.length == 0);
     };
 
     parser.ontext = function (text) {
-      console.log('text', JSON.stringify(text));
+      //console.log('text', JSON.stringify(text));
 
       let t = tags.length ? tags[tags.length - 1] : null;
-      let isPre = t ? t.node.name === 'pre' : false;
 
-      if (t.lastWasText) {
-        // this maybe a parsing problem, sometimes it call ontext
-        // many times
-        text = output.pop() + text;
-      }
-
-      // do not use trim, because remove newlines
-      let cleanText = text;
-
-      if (!t.lastWasText) {
-        cleanText = cleanText
-          .replace(/^[\r\n][\r\n]*/, '') // remove newlines at start of texts
-      }
-
-      cleanText = cleanText
-        .replace(/^[ \t][ \t]*/, '') // start
-        .replace(/[ \t][ \t]*$/, '') // end
-        .replace(/^(\r|\n)*$/, ''); // only new lines?
-
-      console.log('cleanText', JSON.stringify(cleanText));
-      //if (text.match(wsRE) == null) {
-      if (cleanText.length) {
-        if (!t) {
-          throw new Error("Global text is not allowed, enclose it in a tag");
-        }
-
-        console.log('t.lastWasText', t.lastWasText);
-
-        t.hasText = true;
-        t.lastWasText = true;
-
-        if (isPre) {
-          t.rawText = true;
-          output.push(text);
-          return;
-        }
-
-        // no-pre -> use trimmed one
-        text = cleanText;
-
-        const multiline = text.indexOf("\n") !== -1;
-        console.log('multiline', multiline);
-
-        if (!multiline) {
-          output.push(indent.join('') + text);
-          return;
-        }
-
-        t.rawText = true;
-
-        // reformat string if not in a pre
-        output.push(
-          "\n" + text.split("\n").map((line) => {
-            return indent.join('') + line.trim();
-          }).join("\n")
-        );
-
-        if (t) {
-          t.newlineClose = true;
-        }
+      if (t !== null) {
+        t.text += text;
       }
     };
 
@@ -192,8 +131,9 @@ module.exports = {
     };
 
     parser.onend = function () {
-      console.log('module.exports.options.newlineEOF', module.exports.options.newlineEOF);
-      if (module.exports.options.newlineEOF) {
+      //console.log('module.exports.options.newlineEOF', module.exports.options.newlineEOF, 'last text', JSON.stringify(output[output.length -1]));
+      // add new line? last line has text ?
+      if (module.exports.options.newlineEOF && output[output.length -1].length) {
         callback(null,  output.join('\n') + '\n');
       } else {
         callback(null,  output.join('\n'));
@@ -220,7 +160,7 @@ function getAttributes(node) {
       if (re ? order[i].test(keys[j]) : order[i] == keys[j]) {
         attrs.push(getAttribute(keys[j], node.attributes[keys[j]]));
 
-        //console.log('re / ', keys[j]);
+        ////console.log('re / ', keys[j]);
         keys.splice(j, 1);
         --j;
 
@@ -279,4 +219,74 @@ function getAttributeCount(node) {
     .filter(function(key) {
       return module.exports.options.attributes.ignoreCount.indexOf(key) === -1;
     }).length;
+}
+
+
+function formatTextNode(indent, t) {
+  let text = t.text;
+  let isPre = t ? t.node.name === 'pre' : false;
+
+  if (isPre) {
+    t.isRawText = true;
+    return text;
+  }
+
+  // do not use trim, because remove newlines
+  let cleanText = text;
+
+  cleanText = cleanText.trim();
+
+  //  .replace(/^[\r\n][\r\n]*/, '') // remove newlines at start of texts
+  //  .replace(/^[ \t][ \t]*/, '') // start
+  //  .replace(/[ \t][ \t]*$/, '') // end
+  //  .replace(/^(\r|\n)*$/, ''); // only new lines?
+
+  //console.log('cleanText', JSON.stringify(cleanText));
+  //if (text.match(wsRE) == null) {
+  if (!cleanText.length) {
+    return null;
+  }
+
+  if (!t) {
+    throw new Error("Global text is not allowed, enclose it in a tag");
+  }
+
+  // no-pre -> use trimmed one
+  text = cleanText;
+
+  const multiline = text.indexOf("\n") !== -1;
+  //console.log('multiline', multiline);
+
+  if (!multiline) {
+    return indent.join('') + text;
+  }
+
+  if (t) {
+    t.isRawText = true;
+    t.newlineBeforeClose = true;
+  }
+
+  // reformat string if not in a pre
+  return "\n" + text.split("\n").map((line) => {
+      return indent.join('') + line.trim();
+    }).join("\n");
+}
+
+function handleTagText(output, indent, t) {
+  if (t.text.length) {
+    t.text = formatTextNode(indent, t);
+    //console.log("final text: ", JSON.stringify(t.text));
+    if (t.text !== null && t.text.length) {
+      // inline text ?
+      if (t.contents.length) {
+        output.push(t.text);
+      } else if (t.isRawText) {
+        output[output.length -1] += t.text;
+      } else {
+        output[output.length -1] += t.text.trim();
+      }
+    }
+  }
+
+  t.text = '';
 }

@@ -103,7 +103,7 @@ X
     t.end();
   });
 });
-/*
+
 tap.test('no tabulate pre text', function (t) {
   formatter.format(`<pre>
 X
@@ -205,8 +205,6 @@ tap.test('nested texnode append', function (t) {
     t.end();
   });
 });
-
-/*
 
 tap.test('newline-tab attributes sorted regex', function (t) {
   formatter.format(`      <thead>
@@ -316,8 +314,7 @@ tap.test('test newlineAfter', function (t) {
   </p>
 </container>
 
-<div></div>
-`);
+<div></div>`);
     t.end();
   });
 });

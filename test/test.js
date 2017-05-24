@@ -1,7 +1,6 @@
-// test/hello-world.js
-var tap = require('tap')
-var formatter = require('../')
-var path = require('path')
+var tap = require('tap');
+var formatter = require('../');
+var path = require('path');
 
 
 formatter.options.attributes.ignoreCount = ['th2-auth-parent'];
@@ -343,15 +342,59 @@ tap.test('align comments', function (t) {
     `<div><!--a\n\nb\n\nc\n--></div>`,
     {},
     function(err, text) {
-      formatter.options.newlineEOF = false;
-      t.equal(text, ``);
-    t.end();
-  });
+      //console.log(JSON.stringify(text));
+      t.equal(text, "<div>\n  <!--\n    a\n    \n    b\n    \n    c\n  -->\n</div>");
+      t.end();
+    }
+  );
+});
+
+
+tap.test('inline attributes', function (t) {
+
+  formatter.options.attributes.inline['auth'] = ['resource', '[resource]'];
+
+  formatter.format(
+    `<div
+  auth="user"
+  resource="add-user"
+  disable="form.invalid">xxx</div>`,
+    {},
+    function(err, text) {
+      console.log(JSON.stringify(text));
+      t.equal(text, `<div
+  auth="user" resource="add-user"
+  disable="form.invalid">xxx</div>`);
+      t.end();
+    }
+  );
+});
+
+tap.test('inline attributes 2', function (t) {
+
+  formatter.options.attributes.inline['auth'] = ['resource', '[resource]'];
+
+  formatter.format(
+    `<div
+  auth="user"
+  disable="form.invalid">xxx</div>`,
+    {},
+    function(err, text) {
+      console.log(JSON.stringify(text));
+      t.equal(text, `<div
+  auth="user"
+  disable="form.invalid">xxx</div>`);
+      t.end();
+    }
+  );
 });
 
 
 tap.test('format text node properly', function (t) {
   formatter.options.newlineEOF = true;
+
+  formatter.options.attributes.forceEmpty.push('auth');
+
   const filename = path.join(__dirname, '../../front/dashboard/thin2-fe/src/app/views/Environment/EnvReleases/ReleaseService/ReleaseService.component.html');
   formatter.formatFile(
     filename, {

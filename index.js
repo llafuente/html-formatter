@@ -9,6 +9,8 @@ module.exports = {
         '*': [],
         // any tag
       },
+      // attributes that will be in the same line, count as one
+      inline: {},
       ignoreCount: [],
       forceEmpty: [],
     },
@@ -124,7 +126,16 @@ module.exports = {
     parser.oncomment = function (comment) {
       const multiline = comment.indexOf('\n') !== -1;
       if (multiline) {
-        output.push(indent.join('') + `<!--\n${comment.trim()}\n-->`);
+        indent.push(options.indentation);
+        comment = formatText(indent, comment);
+        indent.pop();
+
+        output.push(
+          indent.join('') +
+          '<!--\n' +
+          comment + '\n' +
+          indent.join('') + '-->'
+        );
       } else {
         output.push(indent.join('') + `<!-- ${comment.trim()} -->`)
       }
@@ -154,6 +165,7 @@ const wsRE = /^(\s|\n|\r)*$/;
 
 function getAttributes(node) {
   const attrOrder = module.exports.options.attributes.order;
+  const inline = module.exports.options.attributes.inline;
   const order = attrOrder["*"].concat(attrOrder[node.name] || []);
   const keys = Object.keys(node.attributes);
   const attrs = [];
@@ -164,12 +176,25 @@ function getAttributes(node) {
     //regex!
     for (let j = 0; j < keys.length; ++j) {
       if (re ? order[i].test(keys[j]) : order[i] == keys[j]) {
-        attrs.push(getAttribute(keys[j], node.attributes[keys[j]]));
+        let attrText = getAttribute(keys[j], node.attributes[keys[j]]);
+
+        // inline more attributes ?
+        if (inline[keys[j]]) {
+          inline[keys[j]].forEach((attrName) => {
+            const c = keys.indexOf(attrName);
+
+            if (c !== -1) {
+              attrText += ' ' + getAttribute(attrName, node.attributes[attrName]);
+              keys.splice(c, 1);
+            }
+          });
+        }
+
+        attrs.push(attrText);
 
         ////console.log('re / ', keys[j]);
         keys.splice(j, 1);
         --j;
-
       }
     }
   }
@@ -274,6 +299,19 @@ function formatTextNode(indent, t) {
 
   // reformat string if not in a pre
   return "\n" + text.split("\n").map((line) => {
+      return indent.join('') + line.trim();
+    }).join("\n");
+}
+
+function formatText(indent, text) {
+  text = text.trim();
+  const multiline = text.indexOf("\n") !== -1;
+
+  if (!multiline) {
+    return indent.join('') + text;
+  }
+
+  return text.split("\n").map((line) => {
       return indent.join('') + line.trim();
     }).join("\n");
 }

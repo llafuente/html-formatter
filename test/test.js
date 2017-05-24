@@ -319,12 +319,45 @@ tap.test('test newlineAfter', function (t) {
   });
 });
 
-/*
+
+tap.test('align comments', function (t) {
+
+  formatter.format(
+    `<!-- WTF! -->
+    <div><!-- WTF! --><!-- WTF!2 --></div>`,
+    {},
+    function(err, text) {
+      formatter.options.newlineEOF = false;
+      t.equal(text, `<!-- WTF! -->
+<div>
+  <!-- WTF! -->
+  <!-- WTF!2 -->
+</div>`);
+    t.end();
+  });
+});
+
+tap.test('align comments', function (t) {
+
+  formatter.format(
+    `<div><!--a\n\nb\n\nc\n--></div>`,
+    {},
+    function(err, text) {
+      formatter.options.newlineEOF = false;
+      t.equal(text, ``);
+    t.end();
+  });
+});
+
+
 tap.test('format text node properly', function (t) {
+  formatter.options.newlineEOF = true;
+  const filename = path.join(__dirname, '../../front/dashboard/thin2-fe/src/app/views/Environment/EnvReleases/ReleaseService/ReleaseService.component.html');
   formatter.formatFile(
-    path.join(__dirname, '../../front/dashboard/thin2-fe/src/app/views/Environment/EnvReleases/ReleaseService/ReleaseService.component.html'), {
+    filename, {
   }, function(err, text) {
-    t.equal(text, ``);
+    //t.equal(text, ``);
+    require('fs').writeFileSync(filename, text);
     t.end();
   });
 });

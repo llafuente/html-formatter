@@ -122,11 +122,17 @@ module.exports = {
     };
 
     parser.oncomment = function (comment) {
-      const multiline = (comment.match(/\\n/) || []).length;
+      const multiline = comment.indexOf('\n') !== -1;
       if (multiline) {
-        output.push(`<!--\n${comment.trim()}\n-->`);
+        output.push(indent.join('') + `<!--\n${comment.trim()}\n-->`);
       } else {
-        output.push(indent.join('') + `<!-- ${comment} -->`)
+        output.push(indent.join('') + `<!-- ${comment.trim()} -->`)
+      }
+
+      let t = tags.length ? tags[tags.length - 1] : null;
+
+      if (t !== null) {
+        t.contents.push('comment');
       }
     };
 

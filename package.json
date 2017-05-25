@@ -1,7 +1,7 @@
 {
   "name": "html-formatter",
   "version": "1.0.0",
-  "description": "Format HTML in a very customizable way!",
+  "description": "Format/Beautify HTML the right way, giving you full control!. Designed specially for heavy attribute HTML like Angular.",
   "main": "index.js",
   "scripts": {
     "test": "tap test/*.js"
@@ -9,7 +9,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "sax": "^1.2.2"
+    "glob": "^7.1.2",
+    "sax": "^1.2.2",
+    "yargs": "^8.0.1"
+  },
+  "bin": {
+    "html-formatter": "bin/html-formatter.js"
   },
   "devDependencies": {
     "tap": "^10.3.2"

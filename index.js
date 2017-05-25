@@ -175,12 +175,17 @@ function getAttributes(node) {
 
     //regex!
     for (let j = 0; j < keys.length; ++j) {
-      if (re ? order[i].test(keys[j]) : order[i] == keys[j]) {
-        let attrText = getAttribute(keys[j], node.attributes[keys[j]]);
+      const key = keys[j];
+
+      if (re ? order[i].test(key) : order[i] == key) {
+        let attrText = getAttribute(key, node.attributes[key]);
+        keys.splice(j, 1);
+        --j;
 
         // inline more attributes ?
-        if (inline[keys[j]]) {
-          inline[keys[j]].forEach((attrName) => {
+        if (inline[key]) {
+          console.log('inline', inline[key]);
+          inline[key].forEach((attrName) => {
             const c = keys.indexOf(attrName);
 
             if (c !== -1) {
@@ -191,10 +196,6 @@ function getAttributes(node) {
         }
 
         attrs.push(attrText);
-
-        ////console.log('re / ', keys[j]);
-        keys.splice(j, 1);
-        --j;
       }
     }
   }
@@ -238,6 +239,11 @@ function printCloseTag(output, indent, tagName, inline) {
 
 function getAttribute(attr, value) {
   if (module.exports.options.attributes.forceEmpty.indexOf(attr) !== -1) {
+    return `${attr}`;
+  }
+
+  // angular compatibility
+  if (attr[0] == '#' && attr == value) {
     return `${attr}`;
   }
 

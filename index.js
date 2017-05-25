@@ -49,6 +49,7 @@ module.exports = {
         node: node,
         contents: [],
         text: '',
+        isSelfClosing: node.isSelfClosing,
         isRawText: false,
         newlineBeforeClose: false,
       };
@@ -95,7 +96,7 @@ module.exports = {
         });
       }
 
-      printOpenTagClose(output, indent, node.name);
+      printOpenTagClose(output, indent, node.isSelfClosing);
       indent.push(options.indentation);
     };
 
@@ -106,7 +107,7 @@ module.exports = {
       handleTagText(output, indent, t);
       //console.log('closetag', tagName, t);
 
-      printCloseTag(output, indent, tagName, t.newlineBeforeClose ? false : t.contents.length == 0);
+      printCloseTag(output, indent, tagName, t.newlineBeforeClose ? false : t.contents.length == 0, t.isSelfClosing);
 
       if (module.exports.options.newlineAfter.indexOf(tagName) !== -1) {
         output.push('');
@@ -184,7 +185,6 @@ function getAttributes(node) {
 
         // inline more attributes ?
         if (inline[key]) {
-          console.log('inline', inline[key]);
           inline[key].forEach((attrName) => {
             const c = keys.indexOf(attrName);
 
@@ -211,29 +211,25 @@ function printOpenTag(output, indent, tagName) {
   output.push(indent.join('') + `<${tagName}`);
 }
 
-function printOpenTagClose(output, indent, tagName) {
-  switch(tagName) {
-    case 'img':
-    case 'input':
-      output[output.length - 1] += ' />';
-      break;
-    default:
-      output[output.length - 1] += '>';
+function printOpenTagClose(output, indent, isSelfClosing) {
+  if (isSelfClosing) {
+    output[output.length - 1] += ' />';
+  } else {
+    output[output.length - 1] += '>';
   }
 }
 
-function printCloseTag(output, indent, tagName, inline) {
+function printCloseTag(output, indent, tagName, inline, isSelfClosing) {
   indent.pop();
-  switch(tagName) {
-  case 'img':
-  case 'input':
-    break;
-  default:
-    if (inline) {
-      output[output.length - 1] += `</${tagName}>`;
-    } else {
-      output.push(indent.join('') + `</${tagName}>`);
-    }
+
+  if (isSelfClosing) {
+    return;
+  }
+
+  if (inline) {
+    output[output.length - 1] += `</${tagName}>`;
+  } else {
+    output.push(indent.join('') + `</${tagName}>`);
   }
 }
 

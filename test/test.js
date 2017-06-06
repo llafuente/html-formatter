@@ -361,7 +361,7 @@ tap.test('inline attributes', function (t) {
   disable="form.invalid">xxx</div>`,
     {},
     function(err, text) {
-      console.log(JSON.stringify(text));
+      //console.log(JSON.stringify(text));
       t.equal(text, `<div
   auth="user" resource="add-user"
   disable="form.invalid">xxx</div>`);
@@ -380,7 +380,7 @@ tap.test('inline attributes 2', function (t) {
   disable="form.invalid">xxx</div>`,
     {},
     function(err, text) {
-      console.log(JSON.stringify(text));
+      //console.log(JSON.stringify(text));
       t.equal(text, `<div
   auth="user"
   disable="form.invalid">xxx</div>`);
@@ -389,13 +389,14 @@ tap.test('inline attributes 2', function (t) {
   );
 });
 
-
+/*
 tap.test('format text node properly', function (t) {
   formatter.options.newlineEOF = true;
 
   formatter.options.attributes.forceEmpty.push('auth');
 
-  const filename = path.join(__dirname, '../../front/dashboard/thin2-fe/src/app/views/Environment/EnvReleases/ReleaseService/ReleaseService.component.html');
+  //const filename = path.join(__dirname, '../../front/dashboard/thin2-fe/src/app/views/Environment/EnvReleases/ReleaseService/ReleaseService.component.html');
+  const filename = path.join(__dirname, '../../front/dashboard/thin2-fe/src/app/views/detalleProducto/ProductStorageDetail/ProductNewStorage.component.html');
   formatter.formatFile(
     filename, {
   }, function(err, text) {

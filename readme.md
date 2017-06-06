@@ -18,7 +18,8 @@ Features
 
 > html-formatter --config ./.html-formmatter.json ./**/*.hmtl
 
---config is optional and will use the closest parent file named: `.html-formmatter.json`
+--config is optional and will use the closest parent file named:
+`.html-formmatter.json`
 
 ### .html-formatter.json
 
@@ -236,7 +237,7 @@ formatter.options.newlineEOF = true;
 
 
 To parse HTML I used [isaacs/sax-js](https://github.com/isaacs/sax-js)
-but i have to include it in the project directly because Angular
+(1.2.2) but I have to include it in the project directly because Angular
 templates aren't XML compilant.
 
 

@@ -1,5 +1,5 @@
 // dev-doc: https://github.com/isaacs/sax-js
-const sax = require("sax");
+const sax = require("./sax/sax.js");
 const fs = require("fs");
 
 module.exports = {

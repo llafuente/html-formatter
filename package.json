@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "glob": "^7.1.2",
-    "sax": "^1.2.2",
     "yargs": "^8.0.1"
   },
   "bin": {

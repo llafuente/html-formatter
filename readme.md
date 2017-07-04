@@ -1,6 +1,6 @@
 # html-formatter
-[![Build Status](https://travis-ci.org/llafuente/ng2-vs-table.svg?branch=master)](https://travis-ci.org/llafuente/ng2-vs-table)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/llafuente/ng2-vs-table/master/LICENSE)
+[![Build Status](https://travis-ci.org/llafuente/html-formatter.svg?branch=master)](https://travis-ci.org/llafuente/html-formatter)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/llafuente/html-formatter/master/LICENSE)
 
 
 Format/Beautify HTML the right way, giving you full control!

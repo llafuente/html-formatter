@@ -389,6 +389,19 @@ tap.test('inline attributes 2', function (t) {
   );
 });
 
+tap.test('fix human stupidity', function (t) {
+
+  formatter.format(
+    `<input type="text">`,
+    {},
+    function(err, text) {
+      //console.log(JSON.stringify(text));
+      t.equal(text, `<input type="text" />`);
+      t.end();
+    }
+  );
+});
+
 /*
 tap.test('format text node properly', function (t) {
   formatter.options.newlineEOF = true;

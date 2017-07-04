@@ -54,6 +54,13 @@ module.exports = {
         newlineBeforeClose: false,
       };
 
+      // NOTE isSelfClosing is good but people forget to use it
+      // no force input, hr, and br to use it!
+      if (['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'].indexOf(node.name) !== -1) {
+        newTag.isSelfClosing = true;
+      }
+
+
       if (tags.length) {
         const t = tags[tags.length - 1];
         t.contents.push(newTag);
@@ -96,7 +103,7 @@ module.exports = {
         });
       }
 
-      printOpenTagClose(output, indent, node.isSelfClosing);
+      printOpenTagClose(output, indent, newTag.isSelfClosing);
       indent.push(options.indentation);
     };
 

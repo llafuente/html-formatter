@@ -9,19 +9,29 @@ Designed specially for heavy attribute HTML like Angular.
 
 Features
 
-* Choose indentation (tabs, spaces or any stupid character)
-* Indent and proper vertical alignament of comments and text nodes
-* Sort, inline and vertical alignament of attributes
-* After formatting your code, your diff will be very readble.
+* Choose your indentation (tabs, spaces or any other stupid character)
+* Indent and vertical align comments and text nodes
+* Sort, inline and vertical align attributes
+* After formatting your code, your diff will be very readable.
 
 
 ## CLI
 
 
-> html-formatter --config ./.html-formmatter.json ./**/*.hmtl
+```
+Usage: html-formatter.js [Options] files
+  files are globbed
 
---config is optional and will use the closest parent file named:
-`.html-formmatter.json`
+Options:
+  --config   configuration file                [default: ".html-formatter.json"]
+  --check    Check if given files are already formatted[boolean] [default: true]
+  --write    Format files in-place                    [boolean] [default: false]
+  --verbose  Format files in-place                    [boolean] [default: false]
+  --help     Show help                                                 [boolean]
+
+```
+
+> html-formatter --config ./.html-formmatter.json --write ./**/*.hmtl
 
 ### .html-formatter.json
 

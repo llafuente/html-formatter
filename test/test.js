@@ -402,7 +402,7 @@ tap.test('fix human stupidity', function (t) {
   );
 });
 
-/*
+
 tap.test('format text node properly', function (t) {
   formatter.options.newlineEOF = true;
 

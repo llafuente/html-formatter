@@ -33,7 +33,7 @@ module.exports = {
     options.multiAttrsInline = options.multiAttrsInline || [];
 
     const parser = sax.parser(true, {
-      strictEntities : false
+      strictEntities : true
     });
 
     parser.onerror = function(err) {

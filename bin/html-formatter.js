@@ -5,14 +5,36 @@
 // node .\bin\html-formatter.js ../robo-advisor/front/thin2-fe/src/app/views/Test/Test.component.html
 
 const argv = require('yargs')
-  .usage('Usage: $0 --config [config-file] files\n' +
+  .usage('Usage: $0 [Options] files\n' +
   '  files are globbed')
+
+  .describe('config', 'configuration file')
   .default('config', '.html-formatter.json')
+
+  .describe('check', 'Check if given files are already formatted')
+  .default('check', true)
+  .boolean('check')
+
+  .describe('write', 'Format files in-place')
+  .default('write', false)
+  .boolean('write')
+
+  .describe('verbose', 'Format files in-place')
+  .default('verbose', false)
+  .boolean('verbose')
+
+
   .demandCommand(1)
   .help()
   .argv;
 
 // get config
+
+function verbose() {
+  if (argv.verbose) {
+    console.log.apply(console, arguments);
+  }
+}
 
 const fs = require('fs');
 const path = require('path');
@@ -22,7 +44,7 @@ let lcwd;
 let config;
 
 while (lcwd != cwd) {
-  console.log('cwd', cwd);
+  verbose('cwd', cwd);
 
   const configFile = path.join(cwd, argv.config);
 
@@ -45,7 +67,7 @@ argv._.forEach((pattern) => {
   files = files.concat(glob.sync(pattern));
 });
 
-console.log(`Glob matched ${files.length} files`);
+verbose(`Glob matched ${files.length} files`);
 
 
 const formatter = require('../index.js');
@@ -62,18 +84,36 @@ for (let i in order) {
   });
 }
 
-console.log("options", config.attributes);
+verbose("options", config.attributes);
 
 
 formatter.options = config;
 
-files.forEach((filename) => {
-  console.log("formatting", filename);
+let allFileOk = true;
 
-  formatter.formatFile(
-    filename, {
-  }, function(err, text) {
-    console.log("saving", filename);
-    require('fs').writeFileSync(filename, text);
-  });
+files.forEach((filename) => {
+  verbose("reading file: ", filename);
+
+  const fileStr = fs.readFileSync(filename).toString();
+
+  formatter.format(
+    fileStr,
+    {},
+    function(err, formmattedFile) {
+      if (argv.write) {
+        console.log(filename, "\u001B[32m[saved]\u001B[39m");
+        require('fs').writeFileSync(filename, formmattedFile);
+      } else if (argv.check) {
+        if (formmattedFile === fileStr) {
+          console.log(filename, "\u001B[32m[ok]\u001B[39m");
+        } else {
+          allFileOk = false;
+          console.log(filename, "\u001B[31m[ko]\u001B[39m");
+        }
+      }
+    }
+  );
+
 });
+
+process.exit(allFileOk ? 0 : 1);

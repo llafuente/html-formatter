@@ -401,24 +401,3 @@ tap.test('fix human stupidity', function (t) {
     }
   );
 });
-
-
-tap.test('format text node properly', function (t) {
-  formatter.options.newlineEOF = true;
-
-  formatter.options.attributes.forceEmpty.push('auth');
-
-  //const filename = path.join(__dirname, '../../front/dashboard/thin2-fe/src/app/views/Environment/EnvReleases/ReleaseService/ReleaseService.component.html');
-  const filename = path.join(__dirname, '../../front/dashboard/thin2-fe/src/app/views/detalleProducto/ProductStorageDetail/ProductNewStorage.component.html');
-  formatter.formatFile(
-    filename, {
-  }, function(err, text) {
-    //t.equal(text, ``);
-    require('fs').writeFileSync(filename, text);
-    t.end();
-  });
-});
-
-
-
-/**/

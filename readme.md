@@ -19,7 +19,7 @@ Features
 
 
 ```
-Usage: html-formatter.js [Options] files
+Usage: html-formatter [Options] files
   files are globbed
 
 Options:

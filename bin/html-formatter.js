@@ -39,9 +39,10 @@ function verbose() {
 const fs = require('fs');
 const path = require('path');
 
-let cwd = __dirname;
+//let cwd = __dirname;
+let cwd = process.cwd();
 let lcwd;
-let config;
+let config = null;
 
 while (lcwd != cwd) {
   verbose('cwd', cwd);
@@ -57,7 +58,10 @@ while (lcwd != cwd) {
   cwd = path.join(cwd, '..');
 }
 
-//fs.statSync();
+if (!config) {
+  console.error(`Cannot find configuration file: ${argv.config}`);
+  process.exit(1);
+}
 
 const glob = require('glob');
 
